@@ -1,0 +1,78 @@
+# Version '3.8' is modern and widely supported.
+version: '3.8'
+
+services:
+  web:
+    # Using the image name from your server's
+    # 'cat' output.
+    image: ghcr.io/onesteinbv/curq:18.0-dev
+    container_name: odoo18
+    depends_on:
+      - db
+    # The entrypoint script has finished and prepared
+    # the config file. We now tell the container to
+    # run the Odoo server using that config.
+    command: odoo -c /odoo/odoo.cfg
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      # The 18-dev image's log shows it expects custom
+      # addons in /odoo/custom
+      - ./:/odoo/custom
+    environment:
+      - DB_HOST=db
+      - DB_USER=odoo
+      - DB_PASSWORD=odoo
+      - DB_PORT=5432
+      # We still tell Odoo to use this DB.
+      - DB_NAME=odoo_prod
+      # --- THIS IS THE FIX ---
+      # We must escape the $ with another $
+      # so Docker Compose treats it as a literal string.
+      - DB_FILTER=^odoo_prod$$
+      # --- End of Fix ---
+    stop_grace_period: 1m
+    # We add this so NGINX can find the Odoo container
+    # by the hostname 'web'.
+    networks:
+      - odoo-network
+
+  db:
+    # Using Postgres 17 as you confirmed.
+    image: postgres:17-alpine
+    container_name: odoo18_db
+    environment:
+      # We REMOVE POSTGRES_DB.
+      # This stops the 'db' container from creating an empty
+      # 'odoo_prod' database. The 'web' container will
+      # create AND initialize it.
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+    networks:
+      - odoo-network
+
+  nginx:
+    # This is the NGINX service to act as a reverse proxy.
+    image: nginx:alpine
+    container_name: odoo18_nginx
+    depends_on:
+      - web
+    # Exposing port 80 as per the 16.0 nginx.conf.
+    ports:
+      - "80:80"
+      # - "443:443" # <-- Add this back if you set up SSL
+    volumes:
+      # This points to the nginx.conf file you also have.
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - odoo-network
+
+volumes:
+  odoo-web-data:
+  odoo-db-data:
+
+networks:
+  odoo-network:
+    driver: bridge
+
