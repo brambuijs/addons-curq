@@ -1,6 +1,6 @@
 ./odoo:
   defaults:
-    depth: 200
+    depth: 800
   remotes:
     odoo: https://github.com/odoo/odoo.git
     ByteMeAsap: https://github.com/ByteMeAsap/odoo.git
@@ -15,7 +15,8 @@
   remotes:
     onestein: https://github.com/onesteinbv/addons-generic.git
   merges:
-    - onestein 18.0
+    - remote: onestein
+      ref: 520edb8548551553372031b470ea86f2727ad3fa
 
 # oca
 ./oca:
@@ -25,7 +26,7 @@
     onestein: https://github.com/onesteinbv/addons-oca.git
   merges:
     - remote: onestein
-      ref: 6d119d30af12ed35a24ef88e458c3039ab155d61
+      ref: afcce39abdf9daafc4c4a3bdff05b3e9328de039
 
 # third-party
 ./addons-third-party:
@@ -44,12 +45,3 @@
     odoo: https://github.com/odoo/design-themes.git
   merges:
     - odoo 18.0
-
-# sendcloud: until the modules are available in the OCA, we include them here
-# ./addons-sendcloud:
-#   defaults:
-#     depth: 1
-#   remotes:
-#     onestein: https://github.com/onesteinbv/addons-sendcloud.git
-#   merges:
-#     - onestein 18.0
